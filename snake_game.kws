@@ -1,0 +1,212 @@
+//snake game written in KWORK
+//ruslankhamroev@gmail.com
+//compiler - > https://github.com/Kw0rker/Kwork
+//date:02/10/2023 6:30 pm
+
+prototype word createDrawable(word x,word y,word char)
+prototype word draw(adress drawable,word size)
+
+#include strings.kwh
+#include math.kwh
+
+function main
+let draw=[256]
+let yOFFSET=20
+let HeadX=32
+let key=0
+let HeadY=32+yOFFSET
+let player = CALL createDrawable{HeadX,HeadY,'@'}
+let appleX=20
+let appleY=40
+let apple = CALL createDrawable{appleX,appleY,'&'}
+let neg = -1
+let seed = 1337
+let offY=neg
+let offX=0
+let eatApple=0
+let score=2
+for i=1;i>0;i++
+{
+KASM{
+	SYSCALL 103
+}
+	//update the seed
+	let seed = CALL rand{seed}
+	//get input
+	input key
+
+	//check if input leads us into our body
+	if (key=='w')*(offY!=1)
+	{
+		let offY=neg
+		let offX=0
+	}
+	else if (key=='s')*(offY!=neg)
+	{
+		let offY=1
+		let offX=0
+	}
+	else if (key=='a')*(offX!=1)
+	{
+		let offY=0
+		let offX=neg
+	}
+	else if (key=='d')*(offX!=neg)
+	{
+		let offY=0
+		let offX=1
+	}
+	else if key==10
+	{
+		let i=-1111
+	}
+
+	let HeadY=HeadY+offY
+	let HeadX=HeadX+offX
+	//update player pos
+
+	//check if position is outof bound
+
+	if HeadX>63
+	{
+		let HeadX=0
+	}
+	if HeadX<0
+	{
+		let HeadX=63
+	}
+	if HeadY>(63)
+	{
+		let HeadY=yOFFSET
+	}
+	if HeadY<yOFFSET
+	{
+		let HeadY=63
+	}
+	
+	if (HeadY==appleY)*(HeadX==appleX)
+	{
+		let eatApple=1
+	}
+
+	//check for colision
+	for z=2;z<score;z++
+	{
+		let dr = draw[z]
+		let yy = dr&&65535
+		let xx = (dr>>16)&&65535
+
+		if (HeadY==yy)*(HeadX==xx)
+		{
+			let i=-1111
+			//game ower
+		}
+	}
+
+
+	//update pos of snake elements
+	let exc=draw[1]
+	let EXC=0
+	for x=2;x<score;x++
+	{
+
+		//save position of N element
+		let EXC=draw[x]
+		//set element of N-1 to N
+		let draw[x]=exc
+		//restore the original value to be copied for N+1
+		let exc=EXC
+
+	}
+
+
+	//check if we tured into the first non head body
+
+	let player = CALL createDrawable{HeadX,HeadY,'@'}
+	let draw[1]=player
+	let draw[0]=apple
+
+
+	if (eatApple==1)
+	{
+		//set the flag to 0 so it's not trigered again
+		let eatApple=0
+
+		//append to snake
+		let score=score+1
+
+
+		let appleX=seed
+		let seed = CALL rand{seed}
+		let appleY=seed
+		let appleX=appleX%64
+		let appleY=appleY%44
+
+		let appleY=appleY+yOFFSET
+		let apple = CALL createDrawable{appleX,appleY,'&'}
+
+
+
+	}
+
+	let temp = CALL draw{draw,score+1}
+
+	//delay
+	for x=0;x<180000;x++
+	{
+
+	}
+
+}
+
+end
+
+
+//@param x - > x coordinate of drawable
+//@param y -> y coordinate of drawable
+//@char asci representation of drawable
+function word createDrawable(word x,word y,word char)
+return 0 || y || (x<<16) || (char<<32)
+
+
+//@param drawable list of drawable characters 
+//@param size size of the list
+//function takes drwable list and displays each drawable on the screen
+//drawable format: 1 byte char,2 byte x pos, 2 byte y pos
+
+
+function word draw(adress drawable,word size)
+let screen = [8]
+//stores 64 chars
+let temp = [8]
+let d = CALL memset{screen,8,0}
+let counter=0
+for y=0;y<64;y++
+{
+	for x=0;x<8;x++
+	{
+		let d = CALL memset{temp,8,32}
+
+		for draw=0;draw<size;draw++
+		{
+			let dr = drawable[draw]
+			let yy = dr&&65535
+			let xx = (dr>>16)&&65535
+			let d = xx/8
+			if (yy==y)*(d==x)
+			{
+				let dem=xx%8
+				let temp[dem]=dr>>32
+			}
+		}
+		let d = CALL AppendBuffer{screen,#counter,temp}
+	}
+	let d = CALL FlushBuffer{screen}
+	let d = CALL memset{screen,8,0}
+	let counter=0
+}
+let d = CALL Flush{} 
+return 0
+
+
+
